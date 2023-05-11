@@ -12,7 +12,16 @@ RAW_ICHI:
     date_format: '%Y-%m-%d'
   layer: raw
 
-ICHI:
-  # temporary data
-  # when the pipeline is completed, all the data stored in the MemoryDataset objects within that pipeline will be cleared or released.
-  type: MemoryDataSet  
+# temporary data
+# when the pipeline is completed, all the data stored in the MemoryDataset objects within that pipeline will be cleared or released.
+ichi:
+  type: MemoryDataSet 
+train_df:
+  type: MemoryDataSet 
+test_df:
+  type: MemoryDataSet 
+train_info:
+  type: MemoryDataSet 
+test_info:
+  type: MemoryDataSet 
+ 

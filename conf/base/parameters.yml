@@ -1,1 +1,6 @@
 index_name: "time"
+input_params: 
+    num: 2
+    col: ["close", "Volume"]
+    train_ratio: 0.8
+    
