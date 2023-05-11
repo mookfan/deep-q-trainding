@@ -1,0 +1,18 @@
+# Here you can define all your data sets by using simple YAML syntax.
+#
+# Documentation for this file format can be found in "The Data Catalog"
+# Link: https://docs.kedro.org/en/stable/data/data_catalog.html
+
+RAW_ICHI:
+  type: pandas.CSVDataSet
+  filepath: data/01_raw/SET_DLY_ICHI_MA9,D.csv
+  load_args:
+    sep: ','
+  save_args:
+    date_format: '%Y-%m-%d'
+  layer: raw
+
+ICHI:
+  # temporary data
+  # when the pipeline is completed, all the data stored in the MemoryDataset objects within that pipeline will be cleared or released.
+  type: MemoryDataSet  
