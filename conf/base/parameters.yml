@@ -1,6 +1,9 @@
 index_name: "time"
 input_params: 
-    num: 2
-    col: ["close", "Volume"]
-    train_ratio: 0.8
-    
+  num: 2
+  col: ["close", "Volume"]
+  train_ratio: 0.8
+model_params:
+  window_size: 14
+  batch_size: 32
+  episode: 10    

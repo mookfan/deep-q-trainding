@@ -17,11 +17,14 @@ RAW_ICHI:
 ichi:
   type: MemoryDataSet 
 train_df:
-  type: MemoryDataSet 
+  type: pandas.ParquetDataSet
+  filepath: data/02_intermediate/train_df.pq
+  layer: intermediate
 test_df:
-  type: MemoryDataSet 
+  type: pandas.ParquetDataSet
+  filepath: data/02_intermediate/test_df.pq
+  layer: intermediate
 train_info:
   type: MemoryDataSet 
 test_info:
   type: MemoryDataSet 
- 
