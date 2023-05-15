@@ -5,14 +5,16 @@ import pandas as pd
 import torch
 import torch.nn as nn
 import torch.optim as optim
+from torchsummary import summary
 
 class Agent(object):
-    def __init__(self, state_size:int, gamma:float=0.15, epsilon:float=1.0):
+    def __init__(self, state_size:int, feature_size:int, batch_size:int, gamma:float=0.15, epsilon:float=1.0):
         self.gamma = gamma
         self.epsilon = epsilon
     
-        self.feature_size = 2 # ['close', 'RSI']
+        self.feature_size = feature_size
         self.state_size = state_size
+        self.batch_size = batch_size
         self.action_size = 3
         self._model = self.cnn_model()
 
@@ -41,6 +43,10 @@ class Agent(object):
                     nn.ReLU(),
                     nn.Linear(3, self.action_size),     # input size: 3, output size: 3
                 )
+        print("\n========= Model Summary ==========")
+        print("Input size: ", self.state_size * self.feature_size)
+        print(summary(model, input_size=(1, self.state_size * self.feature_size), batch_size=self.batch_size))
+        print("\n")
         return model
 
     def act(self, state):

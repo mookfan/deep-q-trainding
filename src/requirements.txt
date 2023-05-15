@@ -16,3 +16,5 @@ orjson~=3.8.5
 torch
 pandas 
 kedro-viz
+kedro[all]
+torchsummary

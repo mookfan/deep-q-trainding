@@ -45,27 +45,26 @@ def tensor_2d_to_3d(tensor) -> torch.tensor:
 	'''
 	return tensor.unsqueeze(0)
 
-def tensor_3d_to_1d(tensor, num=14*2) -> torch.tensor:
+def tensor_3d_to_1d(tensor: torch.tensor, num: int) -> torch.tensor:
 	return tensor.reshape(-1, num)
 
-def prepare_input_state(array) -> np.array:
+def prepare_input_state(array: np.array, num: int) -> np.array:
 	state_2d = df_to_tensor(array)
 	state_3d = tensor_2d_to_3d(state_2d)
-	state_1d = tensor_3d_to_1d(state_3d)
+	state_1d = tensor_3d_to_1d(state_3d, num)
 	return state_1d
 
 def train(data_profile: dict, model_params: dict) -> None:
     train_data = data_profile["df"]
-    close_min = data_profile["min"]["close"]
-    close_max = data_profile["max"]["close"]
-    vol_min = data_profile["min"]["Volume"]
-    vol_max = data_profile["max"]["Volume"]
+    min_values = {index: value for index, value in data_profile["min"].items()}
+    max_values = {index: value for index, value in data_profile["max"].items()}
     window_size = model_params["window_size"]
     batch_size = model_params["batch_size"]
     episode_count = model_params["episode"]
 
     lenght = len(train_data)
     start_ind = window_size - 1
+    num_features = train_data.shape[1] # #columns
 
     best_total_profit = 0
     best_model = None
@@ -74,20 +73,22 @@ def train(data_profile: dict, model_params: dict) -> None:
 
     # TODO: Change from manual min-max w/ auto min-max >> may be separate normalize module to another pipeline
     env = Environment(
-                    data=train_data, 
-                    close_min=close_min,
-                    close_max=close_max,
-                    vol_min=vol_min,
-                    vol_max=vol_max
+                    data=train_data,
+                    min_info=min_values,
+                    max_info=max_values 
                 )
     
     # TODO: Move constant parameter inside agent module to /conf/parameters.yml
-    agent = Agent(state_size=window_size)
+    agent = Agent(
+                    state_size=window_size, 
+                    feature_size=num_features,
+                    batch_size=batch_size
+                )
     
     for e in range(episode_count + 1):
         print("Episode " + str(e) + "/" + str(episode_count))
         state = env.get_state(t=window_size-1, n=window_size)
-        state = prepare_input_state(state)
+        state = prepare_input_state(state, num=window_size*num_features)
 
         total_profit = 0
         agent.myport = []
@@ -112,7 +113,7 @@ def train(data_profile: dict, model_params: dict) -> None:
                 print("Sell: " + formatPrice(train_data['close'].iloc[t]) + " | Profit: " + formatPrice(train_data['close'].iloc[t] - bought_price))
 
             done = True if t == l - 1 else False
-            next_state = prepare_input_state(next_state)
+            next_state = prepare_input_state(next_state, num=window_size*num_features)
             agent.memory.append((state, action, reward, next_state, done))
             state = next_state
             if done:
