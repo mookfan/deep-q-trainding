@@ -13,7 +13,7 @@ def create_pipeline(**kwargs) -> Pipeline:
                 func=set_dataframe_index,
                 inputs=['RAW_ICHI', 'params:index_name'],
                 outputs="ichi",
-                name="DEEP_Q_LEARNING",
+                name="SET_INDEX",
             ),
         node(
                 func=train_test_split,
