@@ -36,7 +36,7 @@ class Environment(object):
         # apply the custom function to each row of the DataFrame
         result = block.apply(self.minmax_normalize, axis=1)
         # extract the individual values from the resulting DataFrame
-        block['close'].loc[:] = result.apply(lambda x: x[0])
-        block['Volume'].loc[:] = result.apply(lambda x: x[1])
+        block.loc[:, 'close'] = result.apply(lambda x: x[0])
+        block.loc[:, 'Volume'] = result.apply(lambda x: x[1])
         return block
         
