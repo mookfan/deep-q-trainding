@@ -5,7 +5,7 @@ generated using Kedro 0.18.8
 
 from kedro.pipeline import Pipeline, node, pipeline
 
-from .nodes import get_information, print_data, train
+from .nodes import get_information, print_data, train, plot_train_result
 
 def create_pipeline(**kwargs) -> Pipeline:
     return pipeline([
@@ -30,7 +30,13 @@ def create_pipeline(**kwargs) -> Pipeline:
         node(
                 func=train,
                 inputs=['train_info', 'params:model_params'],
-                outputs=None,
-                name="TRAIN_MODEL",
+                outputs="result_data",
+                name="TRAIN_RESULT",
+            ),
+        node(
+                func=plot_train_result,
+                inputs=['result_data'],
+                outputs="result_plot",
+                name="PLOT_RESULT",
             ),
     ])

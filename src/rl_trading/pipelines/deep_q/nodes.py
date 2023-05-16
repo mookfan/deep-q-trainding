@@ -9,6 +9,7 @@ from kedro.runner import *
 from copy import deepcopy
 import numpy as np
 import pandas as pd
+import plotly.graph_objects as go
 import torch
 
 from .nodes import * # your node functions
@@ -71,20 +72,25 @@ def train(data_profile: dict, model_params: dict) -> None:
     best_episode = None
     l = lenght - 1
 
-    # TODO: Change from manual min-max w/ auto min-max >> may be separate normalize module to another pipeline
     env = Environment(
                     data=train_data,
                     min_info=min_values,
                     max_info=max_values 
                 )
     
-    # TODO: Move constant parameter inside agent module to /conf/parameters.yml
     agent = Agent(
                     state_size=window_size, 
                     feature_size=num_features,
                     batch_size=batch_size
                 )
-    
+    result = {
+                "episode": [], 
+                "total_profit": [],
+                "best_episode": best_episode,
+                "best_total_profit": best_total_profit,
+                # "best_model": best_model
+            }
+
     for e in range(episode_count + 1):
         print("Episode " + str(e) + "/" + str(episode_count))
         state = env.get_state(t=window_size-1, n=window_size)
@@ -120,6 +126,8 @@ def train(data_profile: dict, model_params: dict) -> None:
                 print("--------------------------------")
                 print("Total Profit: " + formatPrice(total_profit))
                 print("--------------------------------")
+                result["episode"].append(e)
+                result["total_profit"].append(total_profit)
 
             if len(agent.memory) > batch_size:
                 agent.exp_replay(batch_size)
@@ -128,4 +136,34 @@ def train(data_profile: dict, model_params: dict) -> None:
             best_total_profit = total_profit
             best_model = deepcopy(agent._model)
             best_episode = e
+    result["best_episode"] = [best_episode]
+    result["best_total_profit"] = [best_total_profit]
+    # result["best_model"] = best_model
+    return result
     
+def plot_train_result(result_data: dict) -> None:
+    print(result_data)
+    episode = result_data["episode"]
+    total_profit = result_data["total_profit"]
+    best_episode = result_data["best_episode"]
+    best_total_profit = result_data["best_total_profit"]
+    fig = go.Figure()
+    fig.add_trace(
+        go.Scatter(
+            x=episode, 
+            y=total_profit, 
+            mode='lines+markers', 
+            name='Total Profit'
+        ))
+    fig.add_trace(go.Scatter(
+            x=best_episode, 
+            y=best_total_profit, 
+            mode='markers', 
+            name='Best Total Profit'
+        ))
+    fig.update_layout(
+        title="Total Profit per Episode",
+        xaxis_title="Episode",
+        yaxis_title="Total Profit",
+    )
+    return fig
