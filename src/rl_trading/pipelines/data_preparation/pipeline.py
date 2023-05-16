@@ -18,14 +18,20 @@ def create_pipeline(**kwargs) -> Pipeline:
         node(
                 func=calculate_correlation,
                 inputs=['ichi'],
-                outputs="correlation_matrix",
-                name="COMPUT_INPUT_CORRELATION",
+                outputs="raw_correlation_matrix",
+                name="COMPUT_RAW_DATA_CORRELATION",
             ),
         node(
                 func=train_test_split,
                 inputs=['ichi', 'params:input_params'],
                 outputs=["train_df", "test_df"],
                 name="SPILT_DATA",
+            ),
+        node(
+                func=calculate_correlation,
+                inputs=['train_df'],
+                outputs="train_data_correlation_matrix",
+                name="COMPUT_INPUT_CORRELATION",
             ),
     ])
 

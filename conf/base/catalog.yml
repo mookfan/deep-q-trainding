@@ -33,7 +33,12 @@ test_info:
   layer: model_input
 
 # show correlation
-correlation_matrix:
+raw_correlation_matrix:
   type: matplotlib.MatplotlibWriter
-  filepath: data/08_reporting/input_correlation.png
+  filepath: data/08_reporting/raw_data_correlation.png
   layer: feature
+
+train_data_correlation_matrix:
+  type: matplotlib.MatplotlibWriter
+  filepath: data/08_reporting/train_data_correlation.png
+  layer: model_input
