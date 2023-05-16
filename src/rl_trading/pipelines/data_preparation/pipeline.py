@@ -5,7 +5,7 @@ generated using Kedro 0.18.8
 
 from kedro.pipeline import Pipeline, node, pipeline
 
-from .nodes import set_dataframe_index, train_test_split
+from .nodes import set_dataframe_index, train_test_split, calculate_correlation
 
 def create_pipeline(**kwargs) -> Pipeline:
     return pipeline([
@@ -14,6 +14,12 @@ def create_pipeline(**kwargs) -> Pipeline:
                 inputs=['RAW_ICHI', 'params:index_name'],
                 outputs="ichi",
                 name="SET_INDEX",
+            ),
+        node(
+                func=calculate_correlation,
+                inputs=['ichi'],
+                outputs="correlation_matrix",
+                name="COMPUT_INPUT_CORRELATION",
             ),
         node(
                 func=train_test_split,
