@@ -16,15 +16,29 @@ RAW_ICHI:
 # when the pipeline is completed, all the data stored in the MemoryDataset objects within that pipeline will be cleared or released.
 ichi:
   type: MemoryDataSet 
+  layer: intermediate
 train_df:
   type: pandas.ParquetDataSet
-  filepath: data/02_intermediate/train_df.pq
-  layer: intermediate
+  filepath: data/03_primary/train_df.pq
+  layer: primary
 test_df:
   type: pandas.ParquetDataSet
-  filepath: data/02_intermediate/test_df.pq
-  layer: intermediate
+  filepath: data/03_primary/test_df.pq
+  layer: primary
 train_info:
   type: MemoryDataSet 
+  layer: model_input
 test_info:
   type: MemoryDataSet 
+  layer: model_input
+
+# show correlation
+raw_correlation_matrix:
+  type: matplotlib.MatplotlibWriter
+  filepath: data/08_reporting/raw_data_correlation.png
+  layer: feature
+
+train_data_correlation_matrix:
+  type: matplotlib.MatplotlibWriter
+  filepath: data/08_reporting/train_data_correlation.png
+  layer: model_input

@@ -5,4 +5,4 @@ input_params:
 model_params:
   window_size: 14
   batch_size: 32
-  episode: 10    
+  episode: 10
