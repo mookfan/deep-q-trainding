@@ -1,8 +1,10 @@
 index_name: "time"
 input_params: 
-  col: ["close","Volume"]
+  col: ["close","Volume","high","low"]
   train_ratio: 0.8
 model_params:
   window_size: 14
   batch_size: 32
-  episode: 10
+  episode: 50
+  budget : 30
+  commission : 0.0025

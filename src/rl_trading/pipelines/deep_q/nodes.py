@@ -61,6 +61,8 @@ def train(data_profile: dict, model_params: dict) -> None:
     window_size = model_params["window_size"]
     batch_size = model_params["batch_size"]
     episode_count = model_params["episode"]
+    commission = model_params["commission"]
+    budget = model_params["budget"]
 
     lenght = len(train_data)
     start_ind = window_size - 1
@@ -71,7 +73,7 @@ def train(data_profile: dict, model_params: dict) -> None:
     best_episode = None
     l = lenght - 1
     
-    commision = 0.001
+    all_profit = []
 
     # TODO: Change from manual min-max w/ auto min-max >> may be separate normalize module to another pipeline
     env = Environment(
@@ -93,60 +95,59 @@ def train(data_profile: dict, model_params: dict) -> None:
         state = prepare_input_state(state, num=window_size*num_features)
 
         total_profit = 0
+        buy_count = 0
+        sell_count = 0 
         agent.myport = []
         buy_list = []
-        budget = 20
+        cash_balance = budget
+
 
         print(f"Portfolio: $0.00 | Vol: {len(buy_list)} | Total: {formatPrice(sum(buy_list))}")
-        print(f"Cash Balance: {formatPrice(budget)}\n")
+        print(f"Cash Balance: {formatPrice(cash_balance)}\n")
 
         for t in range(window_size-1, l):
             
             action = agent.act(state)
-
-            agent.optimizer.step()
-            agent.optimizer.zero_grad()
-            
             close_price = train_data['close'].iloc[t]
-            close_price = close_price*commision
+            close_price_com = close_price+(close_price*commission)
             # sit
             next_state = env.get_state(t=t, n=window_size)
             reward = 0
             
             if action == 1 : # buy
                 
-                if budget-close_price>=close_price:
-                    agent.myport.append(close_price)
-                    budget = budget - close_price
-                    buy_list.append(close_price)
-                    commision_fee = close_price*commision
-                    bought_price = close_price+commision_fee
-                    print(f"Buy: {formatPrice(bought_price)} [{formatPrice(close_price)}")
-                    print(f"Portfolio:\n - AVG:{formatPrice(np.mean(np.array(buy_list)))}\n - Vol: {len(buy_list)}\n - Total: {formatPrice(sum(buy_list))}\n - Cash Balance: {formatPrice(budget)}\n")
+                if cash_balance > close_price_com:
+                    agent.myport.append(close_price_com)
+                    cash_balance = cash_balance - close_price_com
+                    buy_list.append(close_price_com)
+                    buy_count = buy_count + 1
+                    print(f"Buy: {formatPrice(close_price_com)} [{formatPrice(close_price)}] ")
+                    print(f"Portfolio:\n - AVG:{formatPrice(np.mean(np.array(buy_list)))}\n - Vol: {len(buy_list)}\n - Total: {formatPrice(sum(buy_list))}\n - Cash Balance: {formatPrice(cash_balance)}\n")
                 
                 else:
-                    print(f"Buy: {formatPrice(bought_price)} [{formatPrice(close_price)}")
-                    print("Not enough money to buy \n")
+                    pass
+                    # print(f"Buy: {formatPrice(close_price_com)} [{formatPrice(close_price)}]")
+                    # print("Not enough money to buy \n")
                 
             elif action == 2 and len(agent.myport) > 0: # sell
                 # bought_price = agent.myport.pop(0)
-                bought_price = np.mean(np.array(agent.myport)) # ! check
+                bought_price = np.mean(np.array(buy_list)) # ! check
                 if buy_list == []:
                     pass
                 # agent.myport = [] # ! check
                 else:
-                    reward = max((close_price - bought_price)*len(buy_list), 0)
+                    reward = max((close_price - bought_price), 0)
                     # total_profit += close_price - bought_price
-                    total_profit += close_price*len(buy_list) - bought_price*len(buy_list)
-                    commision_fee = close_price*len(buy_list)*commision
-                    sell = close_price+commision_fee
-                    profit = close_price*len(buy_list) - bought_price*len(buy_list)
-                    budget = budget + sell
-                    
-                    print(f"Sell: {formatPrice(sell*len(buy_list))} [{formatPrice(sell)}]| Profit: {formatPrice(profit)}")
+                    total_profit += close_price_com*len(buy_list) - bought_price*len(buy_list)
+                    commission_fee = close_price*len(buy_list)*commission
+                    sell = close_price+commission_fee
+                    profit = sell*len(buy_list)-sum(buy_list) 
+                    cash_balance = cash_balance + sell
+                    sell_count = sell_count + 1
+                    print(f"Sell: {formatPrice(sell*len(buy_list))} [{formatPrice(close_price*len(buy_list))}]| Profit: {formatPrice(profit)}")
                     buy_list = []
-                    print(f"Portfolio:\n - AVG:{formatPrice(sum(buy_list))}\n - Vol: {len(buy_list)}\n - Total:{formatPrice(sum(buy_list))}\n - Cash Balance: {formatPrice(budget)}\n ")
-
+                    print(f"Portfolio:\n - AVG:{formatPrice(sum(buy_list))}\n - Vol: {len(buy_list)}\n - Total:{formatPrice(sum(buy_list))}\n - Cash Balance: {formatPrice(cash_balance)}\n ")
+                    
 
                     
 
@@ -155,9 +156,13 @@ def train(data_profile: dict, model_params: dict) -> None:
             agent.memory.append((state, action, reward, next_state, done))
             state = next_state
             if done:
+                all_profit.append(formatPrice(total_profit))
                 print("--------------------------------")
                 print("Total Profit: " + formatPrice(total_profit))
+                print(f"Buy Count: {buy_count}")
+                print(f"Sell Count: {sell_count}")
                 print("--------------------------------")
+                
 
             if len(agent.memory) > batch_size:
                 agent.exp_replay(batch_size)
@@ -168,3 +173,5 @@ def train(data_profile: dict, model_params: dict) -> None:
             best_total_profit = total_profit
             best_model = deepcopy(agent._model)
             best_episode = e
+    
+    print(all_profit)
