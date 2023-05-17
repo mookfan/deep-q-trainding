@@ -7,6 +7,7 @@ from kedro.io import *
 from kedro.runner import *
 
 from copy import deepcopy
+import json
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
@@ -88,6 +89,8 @@ def train(data_profile: dict, model_params: dict) -> None:
                 "total_profit": [],
                 "best_episode": best_episode,
                 "best_total_profit": best_total_profit,
+                "buy_num": [],
+                "sell_num": []
                 # "best_model": best_model
             }
 
@@ -98,8 +101,10 @@ def train(data_profile: dict, model_params: dict) -> None:
 
         total_profit = 0
         agent.myport = []
+        buy_num = 0
+        sell_num = 0
 
-        for t in range(window_size-1, l):
+        for t in range(start_ind, l):
             action = agent.act(state)
 
             # sit
@@ -107,10 +112,12 @@ def train(data_profile: dict, model_params: dict) -> None:
             reward = 0
             
             if action == 1 : # buy 
+                buy_num += 1
                 agent.myport.append(train_data['close'].iloc[t])
                 print("Buy: " + formatPrice(train_data['close'].iloc[t]))
             
             elif action == 2 and len(agent.myport) > 0: # sell
+                sell_num += 1
                 # bought_price = agent.myport.pop(0)
                 bought_price = np.mean(np.array(agent.myport)) # ! check
                 agent.myport = [] # ! check
@@ -128,6 +135,8 @@ def train(data_profile: dict, model_params: dict) -> None:
                 print("--------------------------------")
                 result["episode"].append(e)
                 result["total_profit"].append(total_profit)
+                result["buy_num"].append(buy_num)
+                result["sell_num"].append(sell_num)
 
             if len(agent.memory) > batch_size:
                 agent.exp_replay(batch_size)
@@ -138,7 +147,6 @@ def train(data_profile: dict, model_params: dict) -> None:
             best_episode = e
     result["best_episode"] = [best_episode]
     result["best_total_profit"] = [best_total_profit]
-    # result["best_model"] = best_model
     return result
     
 def plot_train_result(result_data: dict) -> None:
@@ -147,6 +155,8 @@ def plot_train_result(result_data: dict) -> None:
     total_profit = result_data["total_profit"]
     best_episode = result_data["best_episode"]
     best_total_profit = result_data["best_total_profit"]
+    buy_num = result_data["buy_num"]
+    sell_num = result_data["sell_num"]
     fig = go.Figure()
     fig.add_trace(
         go.Scatter(
@@ -161,9 +171,29 @@ def plot_train_result(result_data: dict) -> None:
             mode='markers', 
             name='Best Total Profit'
         ))
+    fig.add_trace(go.Scatter(
+            x=episode, 
+            y=buy_num, 
+            mode='lines+markers', 
+            name='Buy Num'
+        ))
+    fig.add_trace(go.Scatter(
+            x=episode,
+            y=sell_num,
+            mode='lines+markers',
+            name='Sell Num'
+        ))
     fig.update_layout(
         title="Total Profit per Episode",
         xaxis_title="Episode",
         yaxis_title="Total Profit",
     )
     return fig
+
+def save_result_to_metrics(result_data: dict) -> dict:
+    metrics = {
+                "total_profit": result_data["best_total_profit"][0],
+                "buy_num": result_data["buy_num"][result_data["best_episode"][0]],
+                "sell_num": result_data["sell_num"][result_data["best_episode"][0]]
+            }
+    return metrics
