@@ -7,6 +7,10 @@ import torch.nn as nn
 import torch.optim as optim
 from torchsummary import summary
 
+
+
+
+
 class YourModel(nn.Module):
     def __init__(self, state_size, feature_size, action_size):
         super(YourModel, self).__init__()
@@ -29,7 +33,7 @@ class YourModel(nn.Module):
         return x
     
 class Agent(object):
-    def __init__(self, state_size:int, feature_size:int, batch_size:int, gamma:float=0.15, epsilon:float=1.0):
+    def __init__(self, state_size:int, feature_size:int, batch_size:int, gamma:float=0.95, epsilon:float=0.01):
         self.gamma = gamma
         self.epsilon = epsilon
     
@@ -40,15 +44,17 @@ class Agent(object):
         self._model = self.cnn_model()
 
         self.epsilon_min = 0.01
-        self.epsilon_decay = 0.995
+        self.epsilon_decay = 0.999
         self.lr = 0.001
 
         # define the loss function and optimizer
         self.criterion = nn.MSELoss()
         self.optimizer = optim.Adam(self._model.parameters(), lr=self.lr)
+        
 
         self.myport = []
         self.memory = deque(maxlen=1000)
+
     
         
     def cnn_model(self):
@@ -82,7 +88,7 @@ class Agent(object):
         print(summary(model, input_size=(1, self.state_size * self.feature_size), batch_size=self.batch_size))
         print("\n")
         return model
-        return model
+        # return model
         
     def act(self, state):
         '''

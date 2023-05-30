@@ -5,7 +5,7 @@
 
 RAW_ICHI:
   type: pandas.CSVDataSet
-  filepath: data/01_raw/SET_DLY_ICHI_MA9,D.csv
+  filepath: data/01_raw/SET_DLY_ICHI_IND.csv
   load_args:
     sep: ','
   save_args:
@@ -42,3 +42,21 @@ train_data_correlation_matrix:
   type: matplotlib.MatplotlibWriter
   filepath: data/08_reporting/train_data_correlation.png
   layer: model_input
+
+data_to_plot:
+  type: json.JSONDataSet
+  filepath: data/08_reporting/output_data.json
+  versioned: true
+  layer: model_output
+
+result_plot:
+  type: plotly.JSONDataSet
+  filepath: data/08_reporting/output_data_plot.json
+  versioned: true
+  layer: model_output
+
+metrics:
+  type: tracking.MetricsDataSet
+  filepath: data/09_tracking/metrics.json
+  versioned: true
+  layer: tracking
